@@ -1,0 +1,912 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>Mil Palabras</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mil Palabras">
+<meta name="theme-color" content="#14161B">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #EEEFF3;
+    --bg-elevated: #FFFFFF;
+    --ink: #14161B;
+    --ink-dim: #5B5F6B;
+    --ink-faint: #8B8F9B;
+    --border: #D7D9E2;
+    --accent: #B8791E;
+    --accent-ink: #14161B;
+    --good: #2F8F6C;
+    --hard: #B8791E;
+    --bad: #C9463E;
+    --screen: #14161B;
+    --screen-ink: #F3E7C8;
+    --screen-ink-dim: #9AA0AE;
+    --screen-border: #33384A;
+    --shadow: 0 1px 2px rgba(20,22,27,0.06), 0 8px 24px rgba(20,22,27,0.08);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161B;
+      --bg-elevated: #1C1F27;
+      --ink: #ECEDF2;
+      --ink-dim: #9AA0AE;
+      --ink-faint: #676C7A;
+      --border: #2B2F3A;
+      --accent: #E3B34A;
+      --accent-ink: #14161B;
+      --good: #4CC38A;
+      --hard: #E2954C;
+      --bad: #E5645C;
+      --screen: #0B0C10;
+      --screen-ink: #F5D98A;
+      --screen-ink-dim: #6A7080;
+      --screen-border: #23262F;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 32px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161B;
+    --bg-elevated: #1C1F27;
+    --ink: #ECEDF2;
+    --ink-dim: #9AA0AE;
+    --ink-faint: #676C7A;
+    --border: #2B2F3A;
+    --accent: #E3B34A;
+    --accent-ink: #14161B;
+    --good: #4CC38A;
+    --hard: #E2954C;
+    --bad: #E5645C;
+    --screen: #0B0C10;
+    --screen-ink: #F5D98A;
+    --screen-ink-dim: #6A7080;
+    --screen-border: #23262F;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 12px 32px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: 'Archivo', 'IBM Plex Sans', sans-serif; text-wrap: balance; margin: 0; }
+  button { font-family: inherit; }
+  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+  #app { max-width: 760px; margin: 0 auto; padding: 20px 20px 64px; }
+
+  .err-banner {
+    background: var(--bad); color: #fff; font-size: 0.8rem; font-weight: 600;
+    padding: 10px 14px; border-radius: 10px; margin-bottom: 12px;
+  }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 4px 2px 20px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark { font-size: 1.4rem; line-height: 1; }
+  .brand h1 { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.01em; }
+  .brand .sub { color: var(--ink-dim); font-size: 0.78rem; margin-top: 2px; }
+  .sync-pill {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.72rem; color: var(--ink-dim);
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    padding: 5px 10px 5px 8px; border-radius: 999px; white-space: nowrap;
+  }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-faint); flex: none; }
+  .sync-pill.cloud .sync-dot { background: var(--good); }
+  .sync-pill.local .sync-dot { background: var(--hard); }
+
+  .view { animation: rise 0.35s ease both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .view { animation: none; } }
+
+  /* ---------- dashboard ---------- */
+  .stat-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px; margin-bottom: 22px;
+  }
+  .stat-tile {
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px; box-shadow: var(--shadow);
+  }
+  .stat-tile .n { font-family: 'IBM Plex Mono'; font-size: 1.7rem; font-weight: 600; line-height: 1.1; }
+  .stat-tile .l { color: var(--ink-dim); font-size: 0.74rem; margin-top: 4px; letter-spacing: 0.02em; text-transform: uppercase; }
+  .stat-tile.accent .n { color: var(--accent); }
+
+  .panel {
+    background: var(--bg-elevated); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px;
+  }
+  .panel h2 { font-size: 0.95rem; margin-bottom: 4px; }
+  .panel .desc { color: var(--ink-dim); font-size: 0.82rem; margin-bottom: 16px; }
+
+  .start-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; border: none; border-radius: 14px; padding: 16px;
+    background: var(--accent); color: var(--accent-ink);
+    font-size: 1.02rem; font-weight: 700; cursor: pointer;
+    box-shadow: var(--shadow); transition: transform 0.12s ease, filter 0.12s ease;
+  }
+  .start-btn:hover { filter: brightness(1.06); }
+  .start-btn:active { transform: scale(0.98); }
+  .start-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; filter: none; }
+  .start-btn .play { font-size: 0.85rem; }
+  .empty-note { text-align: center; color: var(--ink-dim); font-size: 0.85rem; margin-top: 10px; }
+
+  .settings-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 12px 0; border-top: 1px solid var(--border);
+  }
+  .settings-row:first-of-type { border-top: none; padding-top: 0; }
+  .settings-row .label { font-size: 0.88rem; font-weight: 500; }
+  .settings-row .hint { color: var(--ink-dim); font-size: 0.74rem; margin-top: 2px; }
+
+  .stepper { display: flex; align-items: center; gap: 10px; }
+  .stepper button {
+    width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--ink); font-size: 1rem; cursor: pointer; line-height: 1;
+  }
+  .stepper button:hover { border-color: var(--accent); }
+  .stepper .val { font-family: 'IBM Plex Mono'; min-width: 28px; text-align: center; font-size: 0.95rem; }
+
+  select.dir-select {
+    appearance: none; background: var(--bg); color: var(--ink);
+    border: 1px solid var(--border); border-radius: 8px; padding: 7px 30px 7px 12px;
+    font-size: 0.85rem; font-family: inherit; cursor: pointer;
+    background-image: linear-gradient(45deg, transparent 50%, var(--ink-dim) 50%), linear-gradient(135deg, var(--ink-dim) 50%, transparent 50%);
+    background-position: calc(100% - 16px) 55%, calc(100% - 11px) 55%;
+    background-size: 5px 5px, 5px 5px; background-repeat: no-repeat;
+  }
+
+  .io-btns { display: flex; gap: 8px; flex-shrink: 0; }
+  .io-btn { border: 1px solid var(--border); background: var(--bg); color: var(--ink); border-radius: 8px; padding: 7px 12px; font-size: 0.78rem; cursor: pointer; }
+  .io-btn:active { background: var(--border); }
+  .io-msg { font-size: 0.76rem; margin-top: 8px; color: var(--ink-dim); min-height: 1em; }
+  .io-msg.ok { color: var(--good); }
+  .io-msg.err { color: var(--bad); }
+  .danger-link { background: none; border: none; color: var(--ink-faint); font-size: 0.78rem; cursor: pointer; padding: 6px 0; text-decoration: underline; text-underline-offset: 2px; }
+  .danger-link:hover { color: var(--bad); }
+  .confirm-row { display: none; align-items: center; gap: 10px; margin-top: 8px; font-size: 0.8rem; color: var(--ink-dim); }
+  .confirm-row.show { display: flex; }
+  .confirm-row button { border: 1px solid var(--border); background: var(--bg); color: var(--ink); border-radius: 8px; padding: 6px 12px; font-size: 0.78rem; cursor: pointer; }
+  .confirm-row button.yes { border-color: var(--bad); color: var(--bad); }
+
+  /* ---------- study ---------- */
+  .exit-btn {
+    background: none; border: none; color: var(--ink-dim); font-size: 0.85rem;
+    cursor: pointer; padding: 8px 4px; margin-bottom: 10px;
+  }
+  .exit-btn:hover { color: var(--ink); }
+
+  .screen {
+    background: var(--screen); border: 1px solid var(--screen-border);
+    border-radius: 18px; overflow: hidden; box-shadow: var(--shadow);
+    aspect-ratio: 16 / 11; display: flex; flex-direction: column; position: relative;
+    cursor: pointer; user-select: none;
+  }
+  .scrubber { height: 3px; background: var(--screen-border); }
+  .scrubber-fill { height: 100%; background: var(--screen-ink); transition: width 0.25s ease; width: 0%; }
+
+  .screen-body {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 24px; gap: 14px; position: relative;
+  }
+  .direction-tag {
+    position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+    font-family: 'IBM Plex Mono'; font-size: 0.68rem; letter-spacing: 0.08em;
+    color: var(--screen-ink-dim); text-transform: uppercase;
+  }
+  .word {
+    font-family: 'Archivo'; font-weight: 800; color: var(--screen-ink);
+    font-size: clamp(1.9rem, 7vw, 3.1rem); line-height: 1.08; letter-spacing: -0.01em;
+  }
+  .answer {
+    font-family: 'IBM Plex Sans'; font-weight: 500; color: #E8EAF0;
+    font-size: clamp(1.1rem, 4vw, 1.5rem); animation: fadein 0.3s ease both;
+  }
+  @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .answer { animation: none; } }
+  .hint { color: var(--screen-ink-dim); font-size: 0.74rem; letter-spacing: 0.02em; }
+  .timecode {
+    position: absolute; bottom: 14px; left: 18px;
+    font-family: 'IBM Plex Mono'; font-size: 0.72rem; color: var(--screen-ink-dim);
+  }
+  .card-meta {
+    position: absolute; bottom: 14px; right: 18px;
+    font-family: 'IBM Plex Mono'; font-size: 0.72rem; color: var(--screen-ink-dim);
+  }
+  .repeat-note {
+    font-family: 'IBM Plex Mono'; font-size: 0.74rem; color: var(--hard);
+    background: rgba(255,255,255,0.06); border: 1px solid var(--screen-border);
+    border-radius: 999px; padding: 4px 12px;
+  }
+  .screen.repeat-flash { animation: repeatFlash 0.5s ease; }
+  @keyframes repeatFlash { 0% { box-shadow: 0 0 0 3px var(--hard); } 100% { box-shadow: var(--shadow); } }
+  @media (prefers-reduced-motion: reduce) { .screen.repeat-flash { animation: none; } }
+
+  .grade-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+  .grade-row button {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    border: 1px solid var(--border); background: var(--bg-elevated); color: var(--ink);
+    border-radius: 12px; padding: 12px 6px; cursor: pointer; font-size: 0.86rem; font-weight: 600;
+    box-shadow: var(--shadow); transition: transform 0.1s ease, border-color 0.1s ease;
+  }
+  .grade-row button:active { transform: scale(0.96); }
+  .grade-row button span { font-family: 'IBM Plex Mono'; font-weight: 400; font-size: 0.7rem; color: var(--ink-dim); }
+  .grade-row button[data-grade="again"]:hover { border-color: var(--bad); }
+  .grade-row button[data-grade="hard"]:hover { border-color: var(--hard); }
+  .grade-row button[data-grade="good"]:hover { border-color: var(--good); }
+  .grade-row button[data-grade="easy"]:hover { border-color: var(--accent); }
+
+  .kbd-hint { text-align: center; color: var(--ink-faint); font-size: 0.72rem; margin-top: 12px; }
+  .kbd-hint kbd { font-family: 'IBM Plex Mono'; border: 1px solid var(--border); border-radius: 4px; padding: 0 5px; }
+
+  /* ---------- summary ---------- */
+  .summary-panel { text-align: center; padding: 36px 20px; }
+  .summary-panel .big { font-family: 'IBM Plex Mono'; font-size: 2.4rem; font-weight: 600; color: var(--accent); }
+  .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; text-align: left; }
+  .summary-grid .item { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+  .summary-grid .item .n { font-family: 'IBM Plex Mono'; font-size: 1.1rem; }
+  .summary-grid .item .l { color: var(--ink-dim); font-size: 0.72rem; }
+
+  a, button { -webkit-tap-highlight-color: transparent; }
+  button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  [hidden] { display: none !important; }
+</style>
+
+<div id="app">
+  <div class="err-banner" id="errBanner" hidden></div>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">🎬</span>
+      <div>
+        <h1>Mil Palabras</h1>
+        <div class="sub">1,018 most common Spanish words</div>
+      </div>
+    </div>
+    <div class="sync-pill" id="syncPill"><span class="sync-dot"></span><span id="syncLabel">Loading…</span></div>
+  </header>
+
+  <main id="view-dashboard" class="view">
+    <div class="stat-grid">
+      <div class="stat-tile accent"><div class="n" id="statDue">0</div><div class="l">Due today</div></div>
+      <div class="stat-tile"><div class="n" id="statNew">0</div><div class="l">New words</div></div>
+      <div class="stat-tile"><div class="n" id="statMastered">0</div><div class="l">Mastered</div></div>
+      <div class="stat-tile"><div class="n" id="statStreak">0</div><div class="l">Day streak</div></div>
+    </div>
+
+    <div class="panel">
+      <h2 id="sessionTitle">Ready to review</h2>
+      <div class="desc" id="sessionDesc">—</div>
+      <button class="start-btn" id="startBtn"><span class="play">▶</span> Start session</button>
+      <div class="empty-note" id="emptyNote" hidden>All caught up for today — nice work. Come back tomorrow, or raise your new-word limit below.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Settings</h2>
+      <div class="settings-row">
+        <div>
+          <div class="label">New words per day</div>
+          <div class="hint">Introduced in frequency order, most common first</div>
+        </div>
+        <div class="stepper">
+          <button id="npdMinus">−</button>
+          <span class="val mono" id="npdVal">20</span>
+          <button id="npdPlus">+</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="label">Direction</div>
+          <div class="hint">Which side you're asked to translate</div>
+        </div>
+        <select class="dir-select" id="dirSelect">
+          <option value="es2en">Español → English</option>
+          <option value="en2es">English → Español</option>
+          <option value="mixed">Mixed</option>
+        </select>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="label">Backup</div>
+          <div class="hint">Save or restore your progress as a file</div>
+        </div>
+        <div class="io-btns">
+          <button class="io-btn" id="exportBtn">Export</button>
+          <button class="io-btn" id="importBtn">Import</button>
+        </div>
+        <input type="file" id="importFile" accept=".json,application/json,text/plain" hidden>
+      </div>
+      <div class="io-msg" id="ioMsg" role="status"></div>
+      <div class="settings-row">
+        <div>
+          <div class="label">Total reviews</div>
+          <div class="hint" id="totalReviewsHint">—</div>
+        </div>
+        <button class="danger-link" id="resetLink">Reset all progress</button>
+      </div>
+      <div class="confirm-row" id="confirmRow">
+        <span>Erase all review history? This can't be undone.</span>
+        <button id="resetCancel">Cancel</button>
+        <button class="yes" id="resetConfirm">Yes, reset</button>
+      </div>
+    </div>
+  </main>
+
+  <main id="view-study" class="view" hidden>
+    <button class="exit-btn" id="exitBtn">← Dashboard</button>
+    <div class="screen" id="screen">
+      <div class="scrubber"><div class="scrubber-fill" id="scrubberFill"></div></div>
+      <div class="screen-body">
+        <div class="direction-tag" id="directionTag">ES → EN</div>
+        <div class="repeat-note" id="repeatNote" hidden>Same word, back around — still learning it</div>
+        <div class="word" id="wordFront">palabra</div>
+        <div class="answer" id="wordBack" hidden></div>
+        <div class="hint" id="flipHint">tap the screen or press space</div>
+      </div>
+      <div class="timecode" id="timecode">0001 / 1018</div>
+      <div class="card-meta" id="cardMeta">new</div>
+    </div>
+    <div class="grade-row" id="gradeRow" hidden>
+      <button data-grade="again">Again<span id="pvAgain">…</span></button>
+      <button data-grade="hard">Hard<span id="pvHard">…</span></button>
+      <button data-grade="good">Good<span id="pvGood">…</span></button>
+      <button data-grade="easy">Easy<span id="pvEasy">…</span></button>
+    </div>
+    <div class="kbd-hint">Space to flip · 1–4 to grade · Esc to exit</div>
+  </main>
+
+  <main id="view-summary" class="view" hidden>
+    <div class="panel summary-panel">
+      <h2>Session complete</h2>
+      <div class="big" id="summaryCount">0</div>
+      <div class="desc">cards reviewed</div>
+      <div class="summary-grid">
+        <div class="item"><div class="n" id="sumAgain">0</div><div class="l">Again</div></div>
+        <div class="item"><div class="n" id="sumHard">0</div><div class="l">Hard</div></div>
+        <div class="item"><div class="n" id="sumGood">0</div><div class="l">Good</div></div>
+        <div class="item"><div class="n" id="sumEasy">0</div><div class="l">Easy</div></div>
+      </div>
+      <button class="start-btn" id="backToDash"><span class="play">←</span> Back to dashboard</button>
+    </div>
+  </main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------------- error surfacing ----------------
+  // Any uncaught error or rejected promise shows up here instead of failing silently,
+  // so a stuck screen is diagnosable instead of just "nothing happens".
+  function showError(msg) {
+    var b = document.getElementById('errBanner');
+    if (!b) return;
+    b.textContent = 'Something went wrong (' + msg + ') — try reloading the page.';
+    b.hidden = false;
+  }
+  window.addEventListener('error', function (e) { showError(e.message || 'unknown error'); });
+  window.addEventListener('unhandledrejection', function (e) {
+    var reason = e.reason;
+    showError((reason && (reason.message || reason.code)) || String(reason));
+  });
+
+  // ---------------- persistence ----------------
+  var STORAGE_KEY = 'mil-palabras-srs-v1';
+  var Store = (function () {
+    var mode = 'local';
+    var docRef = null;
+    var writeChain = Promise.resolve();
+    var onRemote = null;
+    var hydrated = false;
+
+    function loadLocal() {
+      try {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) { return null; }
+    }
+    function saveLocal(state) {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    }
+
+    async function init(onUpdate) {
+      onRemote = onUpdate;
+      try {
+        if (window.claude && typeof window.claude.use === 'function') {
+          var db = await window.claude.use('db');
+          var user = db ? await window.claude.use('user') : null;
+          if (db && user) {
+            var uid = await user.id();
+            if (uid) {
+              docRef = db.doc('data/users/' + uid + '/progress');
+              mode = 'cloud';
+              docRef.onSnapshot(function (snap) {
+                var data = snap.exists ? snap.data() : null;
+                onRemote(data, mode);
+              }, function (err) {
+                console.warn('mil-palabras: db sync error, falling back to local', err);
+                if (mode === 'cloud') { mode = 'local'; onRemote(loadLocal(), mode); }
+              });
+              return;
+            }
+          }
+        }
+      } catch (e) { console.warn('mil-palabras: db unavailable', e); }
+      mode = 'local';
+      onRemote(loadLocal(), mode);
+    }
+
+    function save(state) {
+      // Always hand out a fresh, plain clone — never our own live, still-mutating
+      // reference. Delivered/pending snapshots are frozen by the sync layer, and if
+      // that ever freezes the exact object we handed it, our own app state would be
+      // frozen along with it. Cloning severs that risk entirely.
+      var snapshot = deepClone(state);
+      if (mode === 'cloud' && docRef) {
+        writeChain = writeChain.then(function () { return docRef.set(snapshot); })
+          .catch(function (e) { console.warn('mil-palabras: cloud save failed', e); });
+      } else {
+        saveLocal(snapshot);
+      }
+    }
+
+    return { init: init, save: save, getMode: function () { return mode; } };
+  })();
+
+  // ---------------- date helpers ----------------
+  function todayStr() {
+    var d = new Date();
+    var y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();
+    return y + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+  }
+  function addDays(dateStr, n) {
+    var parts = dateStr.split('-').map(Number);
+    var d = new Date(parts[0], parts[1] - 1, parts[2]);
+    d.setDate(d.getDate() + n);
+    var y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();
+    return y + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+  }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  // Our data is always plain JSON-shaped, so a stringify round-trip is a safe,
+  // reliable way to sever any reference (and any frozen-ness) from the source.
+  function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  // ---------------- app state ----------------
+  var WORDS = [];
+  var state = null; // { cards: {rank: {s,e,i,r,l,d}}, meta: {...} }
+  var session = null; // { queue: [{word, dir}], stats: {...} }
+  var confirmOpen = false;
+
+  function defaultMeta() {
+    return { newPerDay: 20, direction: 'es2en', newDate: todayStr(), newCount: 0,
+             streakCount: 0, streakDate: null, totalReviews: 0 };
+  }
+  function defaultState() { return { cards: {}, meta: defaultMeta() }; }
+
+  function onRemoteState(data, mode) {
+    if (!state) {
+      // data() from a snapshot is frozen and possibly a shared reference across
+      // deliveries — clone it before it becomes our live, continually-mutated state.
+      state = (data && data.cards) ? deepClone(data) : defaultState();
+      if (!state.meta) state.meta = defaultMeta();
+    }
+    updateSyncPill(mode);
+    renderDashboard();
+  }
+
+  function updateSyncPill(mode) {
+    var pill = document.getElementById('syncPill');
+    var label = document.getElementById('syncLabel');
+    pill.classList.remove('cloud', 'local');
+    if (mode === 'cloud') {
+      pill.classList.add('cloud');
+      label.textContent = 'Synced to your account';
+    } else {
+      pill.classList.add('local');
+      label.textContent = 'Saved on this device';
+    }
+  }
+
+  // ---------------- SRS logic ----------------
+  // Guards against corrupted/legacy card data (missing or non-numeric fields)
+  // so a single bad record can never silently break grading.
+  function sanitizeCard(c) {
+    if (typeof c.s !== 'number' || isNaN(c.s)) c.s = 0;
+    if (typeof c.e !== 'number' || isNaN(c.e)) c.e = 2.5;
+    if (typeof c.i !== 'number' || isNaN(c.i)) c.i = 0;
+    if (typeof c.r !== 'number' || isNaN(c.r)) c.r = 0;
+    if (typeof c.l !== 'number' || isNaN(c.l)) c.l = 0;
+    if (typeof c.d !== 'string') c.d = null;
+    return c;
+  }
+  function applyGrade(c, grade) {
+    sanitizeCard(c);
+    var today = todayStr();
+    var requeue = false;
+    if (c.s === 2) {
+      if (grade === 'again') {
+        c.l += 1; c.e = clamp(c.e - 0.2, 1.3, 3.0); c.i = 1; c.d = today; c.s = 1; requeue = true;
+      } else if (grade === 'hard') {
+        c.e = clamp(c.e - 0.15, 1.3, 3.0); c.i = Math.max(1, Math.round(c.i * 1.2)); c.d = addDays(today, c.i);
+      } else if (grade === 'good') {
+        c.i = Math.max(1, Math.round(c.i * c.e)); c.d = addDays(today, c.i);
+      } else if (grade === 'easy') {
+        c.e = clamp(c.e + 0.15, 1.3, 3.0); c.i = Math.max(1, Math.round(c.i * c.e * 1.3)); c.d = addDays(today, c.i);
+      }
+    } else {
+      if (grade === 'again' || grade === 'hard') {
+        c.s = 1; c.i = 0; c.d = today; requeue = true;
+      } else if (grade === 'good') {
+        c.s = 2; c.e = c.e || 2.5; c.i = 1; c.d = addDays(today, 1);
+      } else if (grade === 'easy') {
+        c.s = 2; c.e = clamp((c.e || 2.5) + 0.1, 1.3, 3.0); c.i = 4; c.d = addDays(today, 4);
+      }
+    }
+    c.r += 1;
+    return requeue;
+  }
+  function previewLabel(c, grade) {
+    var clone = { s: c.s, e: c.e, i: c.i, r: c.r, l: c.l, d: c.d };
+    applyGrade(clone, grade);
+    if (clone.i <= 0) return '<1d';
+    if (clone.i === 1) return '1d';
+    if (clone.i < 30) return clone.i + 'd';
+    if (clone.i < 365) return Math.round(clone.i / 30) + 'mo';
+    return (clone.i / 365).toFixed(1) + 'y';
+  }
+  function updateStreak(meta) {
+    var today = todayStr();
+    if (meta.streakDate === today) return;
+    var y = addDays(today, -1);
+    meta.streakCount = (meta.streakDate === y) ? (meta.streakCount || 0) + 1 : 1;
+    meta.streakDate = today;
+  }
+
+  // ---------------- stats ----------------
+  function computeStats() {
+    var today = todayStr();
+    var due = 0, mastered = 0;
+    for (var i = 0; i < WORDS.length; i++) {
+      var c = state.cards[WORDS[i].rank];
+      if (!c) continue;
+      if (c.d && c.d <= today) due++;
+      if (c.i >= 21) mastered++;
+    }
+    var studied = Object.keys(state.cards).length;
+    var newRemaining = WORDS.length - studied;
+    return { due: due, mastered: mastered, newRemaining: newRemaining, streak: state.meta.streakCount || 0 };
+  }
+
+  function newBudgetToday() {
+    var today = todayStr();
+    var introduced = state.meta.newDate === today ? state.meta.newCount : 0;
+    return Math.max(0, state.meta.newPerDay - introduced);
+  }
+
+  function buildSession() {
+    var today = todayStr();
+    var due = [], fresh = [];
+    for (var i = 0; i < WORDS.length; i++) {
+      var w = WORDS[i];
+      var c = state.cards[w.rank];
+      if (c) { if (c.d && c.d <= today) due.push(w); }
+      else fresh.push(w);
+    }
+    due.sort(function (a, b) {
+      var da = state.cards[a.rank].d, db_ = state.cards[b.rank].d;
+      if (da === db_) return a.rank - b.rank;
+      return da < db_ ? -1 : 1;
+    });
+    var budget = newBudgetToday();
+    var freshPick = fresh.slice(0, budget);
+
+    var queue = [];
+    var di = 0, ni = 0;
+    while (di < due.length || ni < freshPick.length) {
+      var n = 0;
+      while (n < 4 && di < due.length) { queue.push(makeItem(due[di], false)); di++; n++; }
+      if (ni < freshPick.length) { queue.push(makeItem(freshPick[ni], true)); ni++; }
+    }
+    return queue;
+  }
+  function makeItem(word, isNew) {
+    var dir = state.meta.direction;
+    if (dir === 'mixed') dir = Math.random() < 0.5 ? 'es2en' : 'en2es';
+    return { word: word, isNew: isNew, dir: dir };
+  }
+
+  // ---------------- rendering: dashboard ----------------
+  function renderDashboard() {
+    var s = computeStats();
+    document.getElementById('statDue').textContent = s.due;
+    document.getElementById('statNew').textContent = s.newRemaining;
+    document.getElementById('statMastered').textContent = s.mastered;
+    document.getElementById('statStreak').textContent = s.streak;
+
+    document.getElementById('npdVal').textContent = state.meta.newPerDay;
+    document.getElementById('dirSelect').value = state.meta.direction;
+    document.getElementById('totalReviewsHint').textContent = (state.meta.totalReviews || 0) + ' cards graded total';
+
+    var budget = newBudgetToday();
+    var sessionSize = s.due + Math.min(budget, s.newRemaining);
+    var startBtn = document.getElementById('startBtn');
+    var emptyNote = document.getElementById('emptyNote');
+    var title = document.getElementById('sessionTitle');
+    var desc = document.getElementById('sessionDesc');
+
+    if (sessionSize > 0) {
+      startBtn.disabled = false;
+      emptyNote.hidden = true;
+      title.textContent = 'Ready to review';
+      var parts = [];
+      if (s.due > 0) parts.push(s.due + ' due');
+      var newTake = Math.min(budget, s.newRemaining);
+      if (newTake > 0) parts.push(newTake + ' new');
+      desc.textContent = parts.join(' · ');
+    } else {
+      startBtn.disabled = true;
+      emptyNote.hidden = false;
+      title.textContent = 'Nothing to review';
+      desc.textContent = ' ';
+    }
+  }
+
+  // ---------------- rendering: study ----------------
+  var revealed = false;
+
+  function renderStudy() {
+    if (!session || session.queue.length === 0) { showView('summary'); renderSummary(); return; }
+    var item = session.queue[0];
+    var w = item.word;
+    var front = item.dir === 'en2es' ? w.en : w.es;
+    var back = item.dir === 'en2es' ? w.es : w.en;
+
+    revealed = false;
+    document.getElementById('wordFront').textContent = front;
+    document.getElementById('wordBack').textContent = back;
+    document.getElementById('wordBack').hidden = true;
+    document.getElementById('flipHint').hidden = false;
+    document.getElementById('gradeRow').hidden = true;
+    document.getElementById('directionTag').textContent = item.dir === 'en2es' ? 'EN → ES' : 'ES → EN';
+
+    var total = session.total;
+    var done = total - session.queue.length;
+    document.getElementById('scrubberFill').style.width = (total ? (done / total * 100) : 0) + '%';
+    document.getElementById('timecode').textContent = pad4(done + 1) + ' / ' + pad4(total);
+
+    var c = state.cards[w.rank];
+    var metaEl = document.getElementById('cardMeta');
+    var screenEl = document.getElementById('screen');
+    var repeatNote = document.getElementById('repeatNote');
+    if (session.justRegraded === w.rank) {
+      metaEl.textContent = 'graded ' + session.justRegradedGrade;
+      metaEl.style.color = (session.justRegradedGrade === 'again') ? 'var(--bad)' : 'var(--hard)';
+      repeatNote.hidden = false;
+      screenEl.classList.remove('repeat-flash');
+      void screenEl.offsetWidth; // restart the animation
+      screenEl.classList.add('repeat-flash');
+    } else {
+      metaEl.style.color = '';
+      repeatNote.hidden = true;
+      screenEl.classList.remove('repeat-flash');
+      if (!c) metaEl.textContent = 'new';
+      else if (c.s === 1) metaEl.textContent = 'relearning';
+      else metaEl.textContent = 'ease ' + sanitizeCard(c).e.toFixed(1) + ' · ' + c.i + 'd';
+    }
+    session.justRegraded = null;
+  }
+  function pad4(n) { n = String(n); while (n.length < 4) n = '0' + n; return n; }
+
+  function reveal() {
+    if (revealed) return;
+    revealed = true;
+    var item = session.queue[0];
+    var c = state.cards[item.word.rank] || { s: 0, e: 2.5, i: 0, r: 0, l: 0, d: null };
+    document.getElementById('wordBack').hidden = false;
+    document.getElementById('flipHint').hidden = true;
+    document.getElementById('gradeRow').hidden = false;
+    document.getElementById('pvAgain').textContent = previewLabel(c, 'again');
+    document.getElementById('pvHard').textContent = previewLabel(c, 'hard');
+    document.getElementById('pvGood').textContent = previewLabel(c, 'good');
+    document.getElementById('pvEasy').textContent = previewLabel(c, 'easy');
+  }
+
+  function gradeCurrent(grade) {
+    if (!revealed) return;
+    var item = session.queue[0];
+    var w = item.word;
+    var c = state.cards[w.rank];
+    var wasFresh = !c;
+    if (!c) { c = { s: 0, e: 2.5, i: 0, r: 0, l: 0, d: null }; state.cards[w.rank] = c; }
+    var requeue = applyGrade(c, grade);
+
+    if (wasFresh) {
+      var today = todayStr();
+      if (state.meta.newDate !== today) { state.meta.newDate = today; state.meta.newCount = 0; }
+      state.meta.newCount += 1;
+    }
+    state.meta.totalReviews = (state.meta.totalReviews || 0) + 1;
+    updateStreak(state.meta);
+    session.stats.reviewed++;
+    session.stats[grade] = (session.stats[grade] || 0) + 1;
+
+    session.queue.shift();
+    if (requeue) {
+      var insertAt = Math.min(session.queue.length, 6);
+      session.queue.splice(insertAt, 0, item);
+      session.total++;
+      if (session.queue[0] && session.queue[0].word.rank === w.rank) {
+        session.justRegraded = w.rank;
+        session.justRegradedGrade = grade;
+      }
+    }
+    Store.save(state);
+    renderStudy();
+  }
+
+  // ---------------- rendering: summary ----------------
+  function renderSummary() {
+    var s = session.stats;
+    document.getElementById('summaryCount').textContent = s.reviewed;
+    document.getElementById('sumAgain').textContent = s.again || 0;
+    document.getElementById('sumHard').textContent = s.hard || 0;
+    document.getElementById('sumGood').textContent = s.good || 0;
+    document.getElementById('sumEasy').textContent = s.easy || 0;
+    renderDashboard();
+  }
+
+  // ---------------- view switching ----------------
+  function showView(name) {
+    ['dashboard', 'study', 'summary'].forEach(function (v) {
+      document.getElementById('view-' + v).hidden = (v !== name);
+    });
+  }
+
+  // ---------------- wiring ----------------
+  document.getElementById('startBtn').addEventListener('click', function () {
+    var queue = buildSession();
+    if (queue.length === 0) return;
+    session = { queue: queue, total: queue.length, stats: { reviewed: 0 }, justRegraded: null, justRegradedGrade: null };
+    showView('study');
+    renderStudy();
+  });
+  document.getElementById('backToDash').addEventListener('click', function () { showView('dashboard'); renderDashboard(); });
+  document.getElementById('exitBtn').addEventListener('click', function () { showView('dashboard'); renderDashboard(); });
+
+  document.getElementById('screen').addEventListener('click', reveal);
+  document.getElementById('gradeRow').addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-grade]');
+    if (btn) gradeCurrent(btn.getAttribute('data-grade'));
+  });
+
+  document.addEventListener('keydown', function (e) {
+    var studyVisible = !document.getElementById('view-study').hidden;
+    if (!studyVisible) return;
+    if (e.code === 'Space') { e.preventDefault(); reveal(); }
+    else if (e.key === '1') gradeCurrent('again');
+    else if (e.key === '2') gradeCurrent('hard');
+    else if (e.key === '3') gradeCurrent('good');
+    else if (e.key === '4') gradeCurrent('easy');
+    else if (e.key === 'Escape') { showView('dashboard'); renderDashboard(); }
+  });
+
+  document.getElementById('npdMinus').addEventListener('click', function () {
+    state.meta.newPerDay = Math.max(5, state.meta.newPerDay - 5);
+    Store.save(state); renderDashboard();
+  });
+  document.getElementById('npdPlus').addEventListener('click', function () {
+    state.meta.newPerDay = Math.min(100, state.meta.newPerDay + 5);
+    Store.save(state); renderDashboard();
+  });
+  document.getElementById('dirSelect').addEventListener('change', function (e) {
+    state.meta.direction = e.target.value;
+    Store.save(state); renderDashboard();
+  });
+
+  document.getElementById('resetLink').addEventListener('click', function () {
+    confirmOpen = true;
+    document.getElementById('confirmRow').classList.add('show');
+  });
+  document.getElementById('resetCancel').addEventListener('click', function () {
+    confirmOpen = false;
+    document.getElementById('confirmRow').classList.remove('show');
+  });
+  document.getElementById('resetConfirm').addEventListener('click', function () {
+    var npd = state.meta.newPerDay, dir = state.meta.direction;
+    state = defaultState();
+    state.meta.newPerDay = npd; state.meta.direction = dir;
+    Store.save(state);
+    document.getElementById('confirmRow').classList.remove('show');
+    renderDashboard();
+  });
+
+  // ---------------- backup: export / import ----------------
+  function ioMessage(text, kind) {
+    var el = document.getElementById('ioMsg');
+    el.textContent = text;
+    el.className = 'io-msg' + (kind ? ' ' + kind : '');
+  }
+
+  function validateImport(parsed) {
+    var s = parsed && parsed.state ? parsed.state : parsed;
+    if (!s || typeof s !== 'object' || !s.cards || typeof s.cards !== 'object' || Array.isArray(s.cards)) {
+      throw new Error('This file is not a Mil Palabras backup.');
+    }
+    var cleanCards = {};
+    var n = 0;
+    Object.keys(s.cards).forEach(function (k) {
+      var c = s.cards[k];
+      if (/^\d+$/.test(k) && c && typeof c === 'object') { cleanCards[k] = c; n++; }
+    });
+    var meta = defaultMeta();
+    if (s.meta && typeof s.meta === 'object') {
+      Object.keys(meta).forEach(function (k) { if (s.meta[k] !== undefined) meta[k] = s.meta[k]; });
+    }
+    return { cards: cleanCards, meta: meta, count: n };
+  }
+
+  document.getElementById('exportBtn').addEventListener('click', function () {
+    try {
+      var payload = { app: 'mil-palabras', version: 1, exportedAt: new Date().toISOString(), state: deepClone(state) };
+      var text = JSON.stringify(payload, null, 2);
+      var name = 'mil-palabras-backup-' + todayStr() + '.json';
+      var file = null;
+      try { file = new File([text], name, { type: 'application/json' }); } catch (e) {}
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: 'Mil Palabras backup' })
+          .then(function () { ioMessage('Backup shared (' + Object.keys(state.cards).length + ' cards).', 'ok'); })
+          .catch(function (e) { if (e && e.name !== 'AbortError') ioMessage('Export failed: ' + e.message, 'err'); });
+        return;
+      }
+      var url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+      var a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      ioMessage('Backup downloaded (' + Object.keys(state.cards).length + ' cards).', 'ok');
+    } catch (e) { ioMessage('Export failed: ' + e.message, 'err'); }
+  });
+
+  document.getElementById('importBtn').addEventListener('click', function () {
+    document.getElementById('importFile').click();
+  });
+
+  document.getElementById('importFile').addEventListener('change', function (e) {
+    var input = e.target;
+    var f = input.files && input.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var result = validateImport(JSON.parse(reader.result));
+        state = { cards: result.cards, meta: result.meta };
+        Store.save(state);
+        renderDashboard();
+        ioMessage('Imported ' + result.count + ' cards. Your progress was replaced with the backup.', 'ok');
+      } catch (err) {
+        ioMessage(err && err.message ? err.message : 'Could not read that file.', 'err');
+      }
+      input.value = '';
+    };
+    reader.onerror = function () { ioMessage('Could not read that file.', 'err'); input.value = ''; };
+    reader.readAsText(f);
+  });
+
+  // ---------------- boot ----------------
+  WORDS = [{"rank":1,"es":"de","en":"of"},{"rank":2,"es":"que","en":"that"},{"rank":3,"es":"no","en":"no"},{"rank":4,"es":"a","en":"to"},{"rank":5,"es":"y","en":"and"},{"rank":6,"es":"ser","en":"to be"},{"rank":7,"es":"en","en":"in"},{"rank":8,"es":"por","en":"for"},{"rank":9,"es":"qué","en":"what"},{"rank":10,"es":"con","en":"with"},{"rank":11,"es":"para","en":"for"},{"rank":12,"es":"estar","en":"to be"},{"rank":13,"es":"mi","en":"my"},{"rank":14,"es":"pero","en":"but"},{"rank":15,"es":"sí","en":"yes"},{"rank":16,"es":"si","en":"if"},{"rank":17,"es":"bien","en":"well"},{"rank":18,"es":"ese","en":"that"},{"rank":19,"es":"su","en":"his/her"},{"rank":20,"es":"yo","en":"I"},{"rank":21,"es":"como","en":"like/as"},{"rank":22,"es":"aquí","en":"here"},{"rank":23,"es":"tu","en":"your"},{"rank":24,"es":"más","en":"more"},{"rank":25,"es":"este","en":"this"},{"rank":26,"es":"todo","en":"all"},{"rank":27,"es":"ya","en":"already"},{"rank":28,"es":"ahora","en":"now"},{"rank":29,"es":"muy","en":"very"},{"rank":30,"es":"haber","en":"to have (aux.)"},{"rank":31,"es":"así","en":"like that"},{"rank":32,"es":"ir","en":"to go"},{"rank":33,"es":"algo","en":"something"},{"rank":34,"es":"bueno","en":"good"},{"rank":35,"es":"tener","en":"to have"},{"rank":36,"es":"él","en":"he"},{"rank":37,"es":"cuando","en":"when"},{"rank":38,"es":"saber","en":"to know"},{"rank":39,"es":"tú","en":"you (informal)"},{"rank":40,"es":"nos","en":"us"},{"rank":41,"es":"nada","en":"nothing"},{"rank":42,"es":"cómo","en":"how"},{"rank":43,"es":"o","en":"or"},{"rank":44,"es":"poder","en":"to be able"},{"rank":45,"es":"ella","en":"she"},{"rank":46,"es":"querer","en":"to want"},{"rank":47,"es":"hacer","en":"to do/make"},{"rank":48,"es":"gracias","en":"thanks"},{"rank":49,"es":"vez","en":"time (occasion)"},{"rank":50,"es":"solo","en":"only"},{"rank":51,"es":"porque","en":"because"},{"rank":52,"es":"creer","en":"to believe"},{"rank":53,"es":"usted","en":"you (formal)"},{"rank":54,"es":"entonces","en":"then"},{"rank":55,"es":"hola","en":"hello"},{"rank":56,"es":"verdad","en":"true/truth"},{"rank":57,"es":"casa","en":"home/house"},{"rank":58,"es":"tan","en":"so"},{"rank":59,"es":"quién","en":"who"},{"rank":60,"es":"tiempo","en":"time"},{"rank":61,"es":"dos","en":"two"},{"rank":62,"es":"nunca","en":"never"},{"rank":63,"es":"dónde","en":"where"},{"rank":64,"es":"favor","en":"favor/please"},{"rank":65,"es":"mucho","en":"a lot"},{"rank":66,"es":"mí","en":"me"},{"rank":67,"es":"sentir","en":"to feel"},{"rank":68,"es":"señor","en":"mister/sir"},{"rank":69,"es":"mejor","en":"better"},{"rank":70,"es":"decir","en":"to say/tell"},{"rank":71,"es":"también","en":"also"},{"rank":72,"es":"sobre","en":"about/on"},{"rank":73,"es":"dios","en":"god"},{"rank":74,"es":"sin","en":"without"},{"rank":75,"es":"ver","en":"to see"},{"rank":76,"es":"hombre","en":"man"},{"rank":77,"es":"vida","en":"life"},{"rank":78,"es":"alguien","en":"someone"},{"rank":79,"es":"cosa","en":"thing"},{"rank":80,"es":"siempre","en":"always"},{"rank":81,"es":"hasta","en":"until"},{"rank":82,"es":"ahí","en":"there"},{"rank":83,"es":"año","en":"year"},{"rank":84,"es":"antes","en":"before"},{"rank":85,"es":"ni","en":"neither/nor"},{"rank":86,"es":"poco","en":"a little"},{"rank":87,"es":"día","en":"day"},{"rank":88,"es":"uno","en":"one"},{"rank":89,"es":"noche","en":"night"},{"rank":90,"es":"otro","en":"another/other"},{"rank":91,"es":"acuerdo","en":"agreement"},{"rank":92,"es":"trabajo","en":"work"},{"rank":93,"es":"nosotros","en":"we"},{"rank":94,"es":"parecer","en":"to seem"},{"rank":95,"es":"gente","en":"people"},{"rank":96,"es":"padre","en":"father"},{"rank":97,"es":"mirar","en":"to look"},{"rank":98,"es":"mismo","en":"same"},{"rank":99,"es":"nadie","en":"nobody"},{"rank":100,"es":"hablar","en":"to speak"},{"rank":101,"es":"ellos","en":"they"},{"rank":102,"es":"tal","en":"such"},{"rank":103,"es":"pasar","en":"to happen"},{"rank":104,"es":"después","en":"after"},{"rank":105,"es":"desde","en":"from"},{"rank":106,"es":"dinero","en":"money"},{"rank":107,"es":"mundo","en":"world"},{"rank":108,"es":"claro","en":"of course"},{"rank":109,"es":"momento","en":"moment"},{"rank":110,"es":"estado","en":"state"},{"rank":111,"es":"mañana","en":"tomorrow"},{"rank":112,"es":"madre","en":"mother"},{"rank":113,"es":"valer","en":"to be worth"},{"rank":114,"es":"lugar","en":"place"},{"rank":115,"es":"donde","en":"where"},{"rank":116,"es":"seguro","en":"sure"},{"rank":117,"es":"esperar","en":"to wait"},{"rank":118,"es":"nuevo","en":"new"},{"rank":119,"es":"hijo","en":"son"},{"rank":120,"es":"allí","en":"there"},{"rank":121,"es":"menos","en":"less"},{"rank":122,"es":"tipo","en":"type"},{"rank":123,"es":"amigo","en":"friend"},{"rank":124,"es":"gran","en":"great"},{"rank":125,"es":"nuestro","en":"our"},{"rank":126,"es":"mujer","en":"woman"},{"rank":127,"es":"mamá","en":"mom"},{"rank":128,"es":"luego","en":"then"},{"rank":129,"es":"papá","en":"dad"},{"rank":130,"es":"hoy","en":"today"},{"rank":131,"es":"tres","en":"three"},{"rank":132,"es":"necesitar","en":"to need"},{"rank":133,"es":"oír","en":"to hear"},{"rank":134,"es":"gustar","en":"to like"},{"rank":135,"es":"parte","en":"part"},{"rank":136,"es":"conmigo","en":"with me"},{"rank":137,"es":"nombre","en":"name"},{"rank":138,"es":"mal","en":"bad"},{"rank":139,"es":"deber","en":"should"},{"rank":140,"es":"realmente","en":"really"},{"rank":141,"es":"aún","en":"still"},{"rank":142,"es":"mío","en":"mine"},{"rank":143,"es":"cada","en":"each"},{"rank":144,"es":"importar","en":"to matter"},{"rank":145,"es":"contigo","en":"with you"},{"rank":146,"es":"razón","en":"reason"},{"rank":147,"es":"alguno","en":"some"},{"rank":148,"es":"tanto","en":"so much"},{"rank":149,"es":"serio","en":"serious"},{"rank":150,"es":"venir","en":"to come"},{"rank":151,"es":"idea","en":"idea"},{"rank":152,"es":"tarde","en":"afternoon"},{"rank":153,"es":"problema","en":"problem"},{"rank":154,"es":"hora","en":"hour"},{"rank":155,"es":"cierto","en":"surely"},{"rank":156,"es":"quien","en":"who"},{"rank":157,"es":"demasiado","en":"too much"},{"rank":158,"es":"amor","en":"love"},{"rank":159,"es":"entre","en":"between"},{"rank":160,"es":"familia","en":"family"},{"rank":161,"es":"policía","en":"police"},{"rank":162,"es":"chica","en":"girl"},{"rank":163,"es":"chico","en":"boy"},{"rank":164,"es":"cuenta","en":"account"},{"rank":165,"es":"todavía","en":"still"},{"rank":166,"es":"salir","en":"to go out"},{"rank":167,"es":"algún","en":"some"},{"rank":168,"es":"hermano","en":"brother"},{"rank":169,"es":"pensar","en":"to think"},{"rank":170,"es":"cabeza","en":"head"},{"rank":171,"es":"cariño","en":"darling"},{"rank":172,"es":"cualquier","en":"any"},{"rank":173,"es":"forma","en":"form"},{"rank":174,"es":"mientras","en":"while"},{"rank":175,"es":"lado","en":"side"},{"rank":176,"es":"caso","en":"case"},{"rank":177,"es":"primero","en":"first"},{"rank":178,"es":"genial","en":"great"},{"rank":179,"es":"suponer","en":"to suppose"},{"rank":180,"es":"pues","en":"well"},{"rank":181,"es":"adiós","en":"goodbye"},{"rank":182,"es":"persona","en":"person"},{"rank":183,"es":"señora","en":"mrs."},{"rank":184,"es":"volver","en":"to return"},{"rank":185,"es":"contra","en":"against"},{"rank":186,"es":"camino","en":"path"},{"rank":187,"es":"durante","en":"during"},{"rank":188,"es":"manera","en":"way"},{"rank":189,"es":"muerto","en":"dead"},{"rank":190,"es":"rápido","en":"fast"},{"rank":191,"es":"cuál","en":"which"},{"rank":192,"es":"ayuda","en":"help"},{"rank":193,"es":"historia","en":"history"},{"rank":194,"es":"entender","en":"to understand"},{"rank":195,"es":"dentro","en":"inside"},{"rank":196,"es":"casi","en":"almost"},{"rank":197,"es":"puerta","en":"door"},{"rank":198,"es":"significar","en":"to mean"},{"rank":199,"es":"semana","en":"week"},{"rank":200,"es":"hacia","en":"toward"},{"rank":201,"es":"quizás","en":"maybe"},{"rank":202,"es":"junto","en":"together"},{"rank":203,"es":"niño","en":"kid"},{"rank":204,"es":"pronto","en":"soon"},{"rank":205,"es":"tío","en":"uncle"},{"rank":206,"es":"suerte","en":"luck"},{"rank":207,"es":"ciudad","en":"city"},{"rank":208,"es":"siquiera","en":"not even"},{"rank":209,"es":"feliz","en":"happy"},{"rank":210,"es":"hija","en":"daughter"},{"rank":211,"es":"minuto","en":"minute"},{"rank":212,"es":"cuánto","en":"how much"},{"rank":213,"es":"os","en":"you all"},{"rank":214,"es":"muerte","en":"death"},{"rank":215,"es":"dejar","en":"to let"},{"rank":216,"es":"realidad","en":"reality"},{"rank":217,"es":"dar","en":"to give"},{"rank":218,"es":"importante","en":"important"},{"rank":219,"es":"corazón","en":"heart"},{"rank":220,"es":"miedo","en":"fear"},{"rank":221,"es":"jefe","en":"boss"},{"rank":222,"es":"agua","en":"water"},{"rank":223,"es":"justo","en":"just"},{"rank":224,"es":"esposa","en":"wife"},{"rank":225,"es":"mano","en":"hand"},{"rank":226,"es":"ojo","en":"eye"},{"rank":227,"es":"adelante","en":"ahead"},{"rank":228,"es":"encontrar","en":"to find"},{"rank":229,"es":"cinco","en":"five"},{"rank":230,"es":"ninguno","en":"none"},{"rank":231,"es":"cara","en":"face"},{"rank":232,"es":"cuidado","en":"care"},{"rank":233,"es":"bajo","en":"under"},{"rank":234,"es":"cerca","en":"near"},{"rank":235,"es":"viejo","en":"old"},{"rank":236,"es":"bastante","en":"enough"},{"rank":237,"es":"fin","en":"end"},{"rank":238,"es":"tomar","en":"to take"},{"rank":239,"es":"único","en":"only"},{"rank":240,"es":"escuchar","en":"to listen"},{"rank":241,"es":"ningún","en":"none"},{"rank":242,"es":"suficiente","en":"enough"},{"rank":243,"es":"punto","en":"point"},{"rank":244,"es":"cuándo","en":"when"},{"rank":245,"es":"seguir","en":"to follow"},{"rank":246,"es":"equipo","en":"team"},{"rank":247,"es":"grande","en":"large"},{"rank":248,"es":"llegar","en":"to arrive"},{"rank":249,"es":"incluso","en":"even"},{"rank":250,"es":"doctor","en":"doctor"},{"rank":251,"es":"difícil","en":"difficult"},{"rank":252,"es":"aunque","en":"although"},{"rank":253,"es":"coche","en":"car"},{"rank":254,"es":"clase","en":"class"},{"rank":255,"es":"cuatro","en":"four"},{"rank":256,"es":"pequeño","en":"small"},{"rank":257,"es":"llamar","en":"to call"},{"rank":258,"es":"allá","en":"over there"},{"rank":259,"es":"último","en":"last"},{"rank":260,"es":"arriba","en":"up"},{"rank":261,"es":"tierra","en":"earth"},{"rank":262,"es":"guerra","en":"war"},{"rank":263,"es":"igual","en":"similar"},{"rank":264,"es":"loco","en":"crazy"},{"rank":265,"es":"sangre","en":"blood"},{"rank":266,"es":"vuelta","en":"return"},{"rank":267,"es":"trabajar","en":"to work"},{"rank":268,"es":"juego","en":"game"},{"rank":269,"es":"cuerpo","en":"body"},{"rank":270,"es":"entrar","en":"to enter"},{"rank":271,"es":"oportunidad","en":"opportunity"},{"rank":272,"es":"teléfono","en":"phone"},{"rank":273,"es":"final","en":"end"},{"rank":274,"es":"listo","en":"ready"},{"rank":275,"es":"fiesta","en":"party"},{"rank":276,"es":"auto","en":"car"},{"rank":277,"es":"vivir","en":"to live"},{"rank":278,"es":"posible","en":"possible"},{"rank":279,"es":"hermana","en":"sister"},{"rank":280,"es":"número","en":"number"},{"rank":281,"es":"mes","en":"month"},{"rank":282,"es":"exactamente","en":"exactly"},{"rank":283,"es":"culpa","en":"fault"},{"rank":284,"es":"abajo","en":"down"},{"rank":285,"es":"escuela","en":"school"},{"rank":286,"es":"fuerte","en":"strong"},{"rank":287,"es":"ello","en":"it"},{"rank":288,"es":"pregunta","en":"question"},{"rank":289,"es":"atrás","en":"back"},{"rank":290,"es":"malo","en":"bad"},{"rank":291,"es":"capitán","en":"captain"},{"rank":292,"es":"bebé","en":"baby"},{"rank":293,"es":"segundo","en":"second"},{"rank":294,"es":"mayor","en":"older"},{"rank":295,"es":"comida","en":"food"},{"rank":296,"es":"morir","en":"to die"},{"rank":297,"es":"conocer","en":"to meet"},{"rank":298,"es":"fácil","en":"easy"},{"rank":299,"es":"comer","en":"to eat"},{"rank":300,"es":"lista","en":"list"},{"rank":301,"es":"probablemente","en":"probably"},{"rank":302,"es":"habitación","en":"room"},{"rank":303,"es":"tratar","en":"to try"},{"rank":304,"es":"buscar","en":"to search"},{"rank":305,"es":"tampoco","en":"neither"},{"rank":306,"es":"amar","en":"to love"},{"rank":307,"es":"joven","en":"young"},{"rank":308,"es":"par","en":"pair"},{"rank":309,"es":"simplemente","en":"simply"},{"rank":310,"es":"medio","en":"middle"},{"rank":311,"es":"sentido","en":"sense"},{"rank":312,"es":"lejos","en":"far"},{"rank":313,"es":"arma","en":"weapon"},{"rank":314,"es":"alto","en":"tall"},{"rank":315,"es":"dólar","en":"dollar"},{"rank":316,"es":"seis","en":"six"},{"rank":317,"es":"seguridad","en":"security"},{"rank":318,"es":"preocupar","en":"to worry"},{"rank":319,"es":"palabra","en":"word"},{"rank":320,"es":"quedar","en":"to stay"},{"rank":321,"es":"oficina","en":"office"},{"rank":322,"es":"matar","en":"to kill"},{"rank":323,"es":"cama","en":"bed"},{"rank":324,"es":"además","en":"besides"},{"rank":325,"es":"recuerdo","en":"memory"},{"rank":326,"es":"acerca","en":"about"},{"rank":327,"es":"luz","en":"light"},{"rank":328,"es":"correcto","en":"right"},{"rank":329,"es":"demonio","en":"demon"},{"rank":330,"es":"dormir","en":"to sleep"},{"rank":331,"es":"sitio","en":"place"},{"rank":332,"es":"ayudar","en":"to help"},{"rank":333,"es":"conseguir","en":"to get"},{"rank":334,"es":"marido","en":"husband"},{"rank":335,"es":"paz","en":"peace"},{"rank":336,"es":"idiota","en":"idiot"},{"rank":337,"es":"plan","en":"plan"},{"rank":338,"es":"cuanto","en":"how much"},{"rank":339,"es":"peor","en":"worse"},{"rank":340,"es":"pueblo","en":"town"},{"rank":341,"es":"vivo","en":"alive"},{"rank":342,"es":"john","en":"John"},{"rank":343,"es":"bastar","en":"to suffice"},{"rank":344,"es":"paso","en":"step"},{"rank":345,"es":"música","en":"music"},{"rank":346,"es":"anoche","en":"last night"},{"rank":347,"es":"país","en":"country"},{"rank":348,"es":"rey","en":"king"},{"rank":349,"es":"perdón","en":"forgiveness"},{"rank":350,"es":"faltar","en":"to lack"},{"rank":351,"es":"diablo","en":"devil"},{"rank":352,"es":"perder","en":"to lose"},{"rank":353,"es":"niña","en":"girl"},{"rank":354,"es":"señorita","en":"miss"},{"rank":355,"es":"diez","en":"ten"},{"rank":356,"es":"llevar","en":"to carry"},{"rank":357,"es":"hospital","en":"hospital"},{"rank":358,"es":"maldito","en":"damn"},{"rank":359,"es":"fuego","en":"fire"},{"rank":360,"es":"poner","en":"to put"},{"rank":361,"es":"calle","en":"street"},{"rank":362,"es":"acabar","en":"to finish"},{"rank":363,"es":"prueba","en":"test"},{"rank":364,"es":"increíble","en":"incredible"},{"rank":365,"es":"real","en":"real"},{"rank":366,"es":"libro","en":"book"},{"rank":367,"es":"orden","en":"order"},{"rank":368,"es":"especial","en":"special"},{"rank":369,"es":"café","en":"coffee"},{"rank":370,"es":"duro","en":"hard"},{"rank":371,"es":"empezar","en":"to start"},{"rank":372,"es":"afuera","en":"outside"},{"rank":373,"es":"perro","en":"dog"},{"rank":374,"es":"cielo","en":"sky"},{"rank":375,"es":"puesto","en":"position"},{"rank":376,"es":"viaje","en":"trip"},{"rank":377,"es":"detrás","en":"behind"},{"rank":378,"es":"cuarto","en":"room"},{"rank":379,"es":"querido","en":"dear"},{"rank":380,"es":"libre","en":"free"},{"rank":381,"es":"cual","en":"which"},{"rank":382,"es":"sonar","en":"to sound"},{"rank":383,"es":"jugar","en":"to play"},{"rank":384,"es":"cambio","en":"change"},{"rank":385,"es":"película","en":"movie"},{"rank":386,"es":"millón","en":"million"},{"rank":387,"es":"llamada","en":"call"},{"rank":388,"es":"resto","en":"rest"},{"rank":389,"es":"extraño","en":"strange"},{"rank":390,"es":"presidente","en":"president"},{"rank":391,"es":"ropa","en":"clothes"},{"rank":392,"es":"agente","en":"agent"},{"rank":393,"es":"información","en":"information"},{"rank":394,"es":"raro","en":"rare"},{"rank":395,"es":"general","en":"general"},{"rank":396,"es":"trato","en":"deal"},{"rank":397,"es":"usar","en":"to use"},{"rank":398,"es":"perfecto","en":"perfect"},{"rank":399,"es":"derecho","en":"right"},{"rank":400,"es":"modo","en":"way"},{"rank":401,"es":"ayer","en":"yesterday"},{"rank":402,"es":"demás","en":"others"},{"rank":403,"es":"noticia","en":"news"},{"rank":404,"es":"asesino","en":"killer"},{"rank":405,"es":"control","en":"control"},{"rank":406,"es":"odio","en":"hate"},{"rank":407,"es":"frente","en":"front"},{"rank":408,"es":"divertido","en":"funny"},{"rank":409,"es":"recordar","en":"to remember"},{"rank":410,"es":"amiga","en":"friend"},{"rank":411,"es":"grupo","en":"group"},{"rank":412,"es":"asunto","en":"matter"},{"rank":413,"es":"mensaje","en":"message"},{"rank":414,"es":"encima","en":"above"},{"rank":415,"es":"atención","en":"attention"},{"rank":416,"es":"diferente","en":"different"},{"rank":417,"es":"callar","en":"to be quiet"},{"rank":418,"es":"daño","en":"damage"},{"rank":419,"es":"suceder","en":"to happen"},{"rank":420,"es":"cambiar","en":"to change"},{"rank":421,"es":"siguiente","en":"next"},{"rank":422,"es":"sino","en":"but"},{"rank":423,"es":"médico","en":"doctor"},{"rank":424,"es":"boca","en":"mouth"},{"rank":425,"es":"error","en":"mistake"},{"rank":426,"es":"jamás","en":"never"},{"rank":427,"es":"largo","en":"long"},{"rank":428,"es":"pena","en":"sorrow"},{"rank":429,"es":"voz","en":"voice"},{"rank":430,"es":"futuro","en":"future"},{"rank":431,"es":"secreto","en":"secret"},{"rank":432,"es":"baño","en":"bathroom"},{"rank":433,"es":"mil","en":"thousand"},{"rank":434,"es":"novia","en":"girlfriend"},{"rank":435,"es":"propio","en":"own"},{"rank":436,"es":"sueño","en":"dream"},{"rank":437,"es":"fuerza","en":"strength"},{"rank":438,"es":"ambos","en":"both"},{"rank":439,"es":"dolor","en":"pain"},{"rank":440,"es":"encantar","en":"to love (things)"},{"rank":441,"es":"edad","en":"age"},{"rank":442,"es":"pie","en":"foot"},{"rank":443,"es":"negro","en":"black"},{"rank":444,"es":"ganar","en":"to win"},{"rank":445,"es":"aire","en":"air"},{"rank":446,"es":"lamentar","en":"to regret"},{"rank":447,"es":"adónde","en":"where (to)"},{"rank":448,"es":"disculpar","en":"to forgive"},{"rank":449,"es":"cita","en":"appointment"},{"rank":450,"es":"sistema","en":"system"},{"rank":451,"es":"gusto","en":"taste"},{"rank":452,"es":"pobre","en":"poor"},{"rank":453,"es":"negocio","en":"business"},{"rank":454,"es":"mente","en":"mind"},{"rank":455,"es":"tuyo","en":"yours"},{"rank":456,"es":"campo","en":"countryside"},{"rank":457,"es":"situación","en":"situation"},{"rank":458,"es":"tras","en":"behind"},{"rank":459,"es":"hotel","en":"hotel"},{"rank":460,"es":"vosotros","en":"you all (informal)"},{"rank":461,"es":"funcionar","en":"to function"},{"rank":462,"es":"foto","en":"photo"},{"rank":463,"es":"abogado","en":"lawyer"},{"rank":464,"es":"alrededor","en":"around"},{"rank":465,"es":"próximo","en":"next"},{"rank":466,"es":"terminar","en":"to finish"},{"rank":467,"es":"pagar","en":"to pay"},{"rank":468,"es":"personal","en":"personal"},{"rank":469,"es":"ocurrir","en":"to occur"},{"rank":470,"es":"mitad","en":"half"},{"rank":471,"es":"pelo","en":"hair"},{"rank":472,"es":"oficial","en":"officer"},{"rank":473,"es":"compañía","en":"company"},{"rank":474,"es":"relación","en":"relationship"},{"rank":475,"es":"montón","en":"a lot"},{"rank":476,"es":"cena","en":"dinner"},{"rank":477,"es":"través","en":"across"},{"rank":478,"es":"accidente","en":"accident"},{"rank":479,"es":"caja","en":"box"},{"rank":480,"es":"tranquilo","en":"calm"},{"rank":481,"es":"bonito","en":"pretty"},{"rank":482,"es":"vista","en":"view"},{"rank":483,"es":"estúpido","en":"stupid"},{"rank":484,"es":"línea","en":"line"},{"rank":485,"es":"caballero","en":"gentleman"},{"rank":486,"es":"tienda","en":"store"},{"rank":487,"es":"comprar","en":"to buy"},{"rank":488,"es":"centro","en":"center"},{"rank":489,"es":"salvo","en":"except"},{"rank":490,"es":"sol","en":"sun"},{"rank":491,"es":"tonto","en":"fool"},{"rank":492,"es":"hambre","en":"hunger"},{"rank":493,"es":"mesa","en":"table"},{"rank":494,"es":"respuesta","en":"answer"},{"rank":495,"es":"completamente","en":"completely"},{"rank":496,"es":"carta","en":"letter"},{"rank":497,"es":"totalmente","en":"totally"},{"rank":498,"es":"imposible","en":"impossible"},{"rank":499,"es":"novio","en":"boyfriend"},{"rank":500,"es":"normal","en":"normal"},{"rank":501,"es":"traje","en":"suit"},{"rank":502,"es":"dirección","en":"address"},{"rank":503,"es":"siete","en":"seven"},{"rank":504,"es":"placer","en":"pleasure"},{"rank":505,"es":"barco","en":"ship"},{"rank":506,"es":"blanco","en":"white"},{"rank":507,"es":"profesor","en":"teacher"},{"rank":508,"es":"servicio","en":"service"},{"rank":509,"es":"muchacho","en":"boy"},{"rank":510,"es":"reunión","en":"meeting"},{"rank":511,"es":"ley","en":"law"},{"rank":512,"es":"programa","en":"program"},{"rank":513,"es":"carrera","en":"career"},{"rank":514,"es":"cumpleaños","en":"birthday"},{"rank":515,"es":"canción","en":"song"},{"rank":516,"es":"hermoso","en":"beautiful"},{"rank":517,"es":"universidad","en":"university"},{"rank":518,"es":"boda","en":"wedding"},{"rank":519,"es":"cualquiera","en":"anyone"},{"rank":520,"es":"sala","en":"room"},{"rank":521,"es":"decisión","en":"decision"},{"rank":522,"es":"don","en":"gift"},{"rank":523,"es":"necesario","en":"necessary"},{"rank":524,"es":"prisa","en":"hurry"},{"rank":525,"es":"embargo","en":"embargo"},{"rank":526,"es":"interesante","en":"interesting"},{"rank":527,"es":"abuela","en":"grandmother"},{"rank":528,"es":"detective","en":"detective"},{"rank":529,"es":"horrible","en":"horrible"},{"rank":530,"es":"suelo","en":"ground"},{"rank":531,"es":"cárcel","en":"jail"},{"rank":532,"es":"acá","en":"here"},{"rank":533,"es":"sentar","en":"to sit"},{"rank":534,"es":"intentar","en":"to try"},{"rank":535,"es":"maldición","en":"curse"},{"rank":536,"es":"silencio","en":"silence"},{"rank":537,"es":"capaz","en":"able"},{"rank":538,"es":"club","en":"club"},{"rank":539,"es":"temer","en":"to fear"},{"rank":540,"es":"broma","en":"joke"},{"rank":541,"es":"gobierno","en":"government"},{"rank":542,"es":"prometer","en":"to promise"},{"rank":543,"es":"cámara","en":"camera"},{"rank":544,"es":"terrible","en":"terrible"},{"rank":545,"es":"regalo","en":"gift"},{"rank":546,"es":"amable","en":"kind"},{"rank":547,"es":"dulce","en":"sweet"},{"rank":548,"es":"ataque","en":"attack"},{"rank":549,"es":"navidad","en":"Christmas"},{"rank":550,"es":"ocho","en":"eight"},{"rank":551,"es":"avión","en":"airplane"},{"rank":552,"es":"investigación","en":"investigation"},{"rank":553,"es":"jurar","en":"to swear"},{"rank":554,"es":"mantener","en":"to maintain"},{"rank":555,"es":"ejército","en":"army"},{"rank":556,"es":"papel","en":"paper"},{"rank":557,"es":"gracioso","en":"funny"},{"rank":558,"es":"principio","en":"beginning"},{"rank":559,"es":"delante","en":"in front"},{"rank":560,"es":"teniente","en":"lieutenant"},{"rank":561,"es":"deseo","en":"desire"},{"rank":562,"es":"nave","en":"ship"},{"rank":563,"es":"basura","en":"trash"},{"rank":564,"es":"contacto","en":"contact"},{"rank":565,"es":"esposo","en":"husband"},{"rank":566,"es":"tren","en":"train"},{"rank":567,"es":"verdadero","en":"true"},{"rank":568,"es":"alma","en":"soul"},{"rank":569,"es":"disculpa","en":"apology"},{"rank":570,"es":"andar","en":"to walk"},{"rank":571,"es":"matrimonio","en":"marriage"},{"rank":572,"es":"locura","en":"madness"},{"rank":573,"es":"oro","en":"gold"},{"rank":574,"es":"permiso","en":"permission"},{"rank":575,"es":"director","en":"director"},{"rank":576,"es":"peligro","en":"danger"},{"rank":577,"es":"libertad","en":"freedom"},{"rank":578,"es":"alegrar","en":"to cheer"},{"rank":579,"es":"bajar","en":"to go down"},{"rank":580,"es":"derecha","en":"right"},{"rank":581,"es":"maravilloso","en":"wonderful"},{"rank":582,"es":"espacio","en":"space"},{"rank":583,"es":"rato","en":"moment"},{"rank":584,"es":"abuelo","en":"grandfather"},{"rank":585,"es":"salud","en":"health"},{"rank":586,"es":"sorpresa","en":"surprise"},{"rank":587,"es":"triste","en":"sad"},{"rank":588,"es":"aun","en":"even"},{"rank":589,"es":"maestro","en":"teacher"},{"rank":590,"es":"según","en":"according to"},{"rank":591,"es":"infierno","en":"hell"},{"rank":592,"es":"tía","en":"aunt"},{"rank":593,"es":"crimen","en":"crime"},{"rank":594,"es":"conocido","en":"acquaintance"},{"rank":595,"es":"consejo","en":"advice"},{"rank":596,"es":"ante","en":"before"},{"rank":597,"es":"iglesia","en":"church"},{"rank":598,"es":"intento","en":"attempt"},{"rank":599,"es":"mayoría","en":"majority"},{"rank":600,"es":"escena","en":"scene"},{"rank":601,"es":"piso","en":"floor"},{"rank":602,"es":"señal","en":"signal"},{"rank":603,"es":"honor","en":"honor"},{"rank":604,"es":"abrir","en":"to open"},{"rank":605,"es":"cerebro","en":"brain"},{"rank":606,"es":"preguntar","en":"to ask"},{"rank":607,"es":"cocina","en":"kitchen"},{"rank":608,"es":"vestido","en":"dress"},{"rank":609,"es":"inteligente","en":"smart"},{"rank":610,"es":"caballo","en":"horse"},{"rank":611,"es":"bar","en":"bar"},{"rank":612,"es":"corte","en":"court"},{"rank":613,"es":"adentro","en":"inside"},{"rank":614,"es":"droga","en":"drug"},{"rank":615,"es":"enseguida","en":"immediately"},{"rank":616,"es":"agradable","en":"pleasant"},{"rank":617,"es":"carne","en":"meat"},{"rank":618,"es":"departamento","en":"apartment"},{"rank":619,"es":"lindo","en":"cute"},{"rank":620,"es":"mar","en":"sea"},{"rank":621,"es":"duda","en":"doubt"},{"rank":622,"es":"edificio","en":"building"},{"rank":623,"es":"cargo","en":"position"},{"rank":624,"es":"víctima","en":"victim"},{"rank":625,"es":"luna","en":"moon"},{"rank":626,"es":"energía","en":"energy"},{"rank":627,"es":"frío","en":"cold"},{"rank":628,"es":"baile","en":"dance"},{"rank":629,"es":"misión","en":"mission"},{"rank":630,"es":"izquierda","en":"left"},{"rank":631,"es":"beber","en":"to drink"},{"rank":632,"es":"finalmente","en":"finally"},{"rank":633,"es":"simple","en":"simple"},{"rank":634,"es":"regresar","en":"to return"},{"rank":635,"es":"sacar","en":"to take out"},{"rank":636,"es":"traer","en":"to bring"},{"rank":637,"es":"opinión","en":"opinion"},{"rank":638,"es":"apenas","en":"hardly"},{"rank":639,"es":"cerveza","en":"beer"},{"rank":640,"es":"reina","en":"queen"},{"rank":641,"es":"temprano","en":"early"},{"rank":642,"es":"tema","en":"topic"},{"rank":643,"es":"prisión","en":"prison"},{"rank":644,"es":"porqué","en":"reason"},{"rank":645,"es":"público","en":"public"},{"rank":646,"es":"salvar","en":"to save"},{"rank":647,"es":"partido","en":"game"},{"rank":648,"es":"causa","en":"cause"},{"rank":649,"es":"caliente","en":"hot"},{"rank":650,"es":"sargento","en":"sergeant"},{"rank":651,"es":"cenar","en":"to have dinner"},{"rank":652,"es":"compañero","en":"partner"},{"rank":653,"es":"banco","en":"bank"},{"rank":654,"es":"existir","en":"to exist"},{"rank":655,"es":"ben","en":"Ben"},{"rank":656,"es":"zona","en":"zone"},{"rank":657,"es":"destino","en":"destiny"},{"rank":658,"es":"base","en":"base"},{"rank":659,"es":"soler","en":"to tend to"},{"rank":660,"es":"cliente","en":"client"},{"rank":661,"es":"encuentro","en":"meeting"},{"rank":662,"es":"pelea","en":"fight"},{"rank":663,"es":"san","en":"saint"},{"rank":664,"es":"norte","en":"north"},{"rank":665,"es":"coronel","en":"colonel"},{"rank":666,"es":"apuesto","en":"handsome"},{"rank":667,"es":"peligroso","en":"dangerous"},{"rank":668,"es":"té","en":"tea"},{"rank":669,"es":"excepto","en":"except"},{"rank":670,"es":"juicio","en":"trial"},{"rank":671,"es":"llave","en":"key"},{"rank":672,"es":"equivocado","en":"wrong"},{"rank":673,"es":"posición","en":"position"},{"rank":674,"es":"trasero","en":"rear/butt"},{"rank":675,"es":"espalda","en":"back"},{"rank":676,"es":"excelente","en":"excellent"},{"rank":677,"es":"éxito","en":"success"},{"rank":678,"es":"ventana","en":"window"},{"rank":679,"es":"especie","en":"species"},{"rank":680,"es":"diferencia","en":"difference"},{"rank":681,"es":"pedir","en":"to ask for"},{"rank":682,"es":"ejemplo","en":"example"},{"rank":683,"es":"radio","en":"radio"},{"rank":684,"es":"leer","en":"to read"},{"rank":685,"es":"calma","en":"calm"},{"rank":686,"es":"hogar","en":"home"},{"rank":687,"es":"fondo","en":"bottom"},{"rank":688,"es":"humano","en":"human"},{"rank":689,"es":"ti","en":"you"},{"rank":690,"es":"unido","en":"united"},{"rank":691,"es":"planeta","en":"planet"},{"rank":692,"es":"respecto","en":"respect"},{"rank":693,"es":"regreso","en":"return"},{"rank":694,"es":"debido","en":"due"},{"rank":695,"es":"parar","en":"to stop"},{"rank":696,"es":"lleno","en":"full"},{"rank":697,"es":"respeto","en":"respect"},{"rank":698,"es":"debajo","en":"under"},{"rank":699,"es":"escribir","en":"to write"},{"rank":700,"es":"estación","en":"station"},{"rank":701,"es":"pista","en":"track"},{"rank":702,"es":"estrella","en":"star"},{"rank":703,"es":"enfermo","en":"sick"},{"rank":704,"es":"doler","en":"to hurt"},{"rank":705,"es":"ocupado","en":"busy"},{"rank":706,"es":"correr","en":"to run"},{"rank":707,"es":"nivel","en":"level"},{"rank":708,"es":"experiencia","en":"experience"},{"rank":709,"es":"salida","en":"exit"},{"rank":710,"es":"confiar","en":"to trust"},{"rank":711,"es":"zapato","en":"shoe"},{"rank":712,"es":"color","en":"color"},{"rank":713,"es":"vistazo","en":"glance"},{"rank":714,"es":"nena","en":"girl"},{"rank":715,"es":"juez","en":"judge"},{"rank":716,"es":"paciente","en":"patient"},{"rank":717,"es":"bolsa","en":"bag"},{"rank":718,"es":"arte","en":"art"},{"rank":719,"es":"bailar","en":"to dance"},{"rank":720,"es":"sur","en":"south"},{"rank":721,"es":"banda","en":"band"},{"rank":722,"es":"aprender","en":"to learn"},{"rank":723,"es":"precio","en":"price"},{"rank":724,"es":"completo","en":"complete"},{"rank":725,"es":"santo","en":"saint"},{"rank":726,"es":"culpable","en":"guilty"},{"rank":727,"es":"gana","en":"desire"},{"rank":728,"es":"azul","en":"blue"},{"rank":729,"es":"comandante","en":"commander"},{"rank":730,"es":"acción","en":"action"},{"rank":731,"es":"regla","en":"rule"},{"rank":732,"es":"obra","en":"work"},{"rank":733,"es":"esperanza","en":"hope"},{"rank":734,"es":"cuestión","en":"question"},{"rank":735,"es":"molestar","en":"to bother"},{"rank":736,"es":"bill","en":"bill"},{"rank":737,"es":"informe","en":"report"},{"rank":738,"es":"río","en":"river"},{"rank":739,"es":"bienvenido","en":"welcome"},{"rank":740,"es":"tocar","en":"to touch"},{"rank":741,"es":"contar","en":"to count/tell"},{"rank":742,"es":"interior","en":"interior"},{"rank":743,"es":"apartamento","en":"apartment"},{"rank":744,"es":"principal","en":"main"},{"rank":745,"es":"perdonar","en":"to forgive"},{"rank":746,"es":"golpe","en":"blow/hit"},{"rank":747,"es":"estilo","en":"style"},{"rank":748,"es":"nueve","en":"nine"},{"rank":749,"es":"definitivamente","en":"definitely"},{"rank":750,"es":"recibir","en":"to receive"},{"rank":751,"es":"bomba","en":"bomb"},{"rank":752,"es":"guardia","en":"guard"},{"rank":753,"es":"pistola","en":"gun"},{"rank":754,"es":"probar","en":"to try/prove"},{"rank":755,"es":"majestad","en":"majesty"},{"rank":756,"es":"marcha","en":"march"},{"rank":757,"es":"común","en":"common"},{"rank":758,"es":"aquel","en":"that (over there)"},{"rank":759,"es":"vuelo","en":"flight"},{"rank":760,"es":"nota","en":"note"},{"rank":761,"es":"valor","en":"value"},{"rank":762,"es":"suyo","en":"theirs"},{"rank":763,"es":"objetivo","en":"objective"},{"rank":764,"es":"repente","en":"sudden"},{"rank":765,"es":"rojo","en":"red"},{"rank":766,"es":"bromear","en":"to joke"},{"rank":767,"es":"entrada","en":"entry"},{"rank":768,"es":"doble","en":"double"},{"rank":769,"es":"evitar","en":"to avoid"},{"rank":770,"es":"máquina","en":"machine"},{"rank":771,"es":"cuello","en":"neck"},{"rank":772,"es":"animal","en":"animal"},{"rank":773,"es":"acaso","en":"perhaps"},{"rank":774,"es":"pareja","en":"couple"},{"rank":775,"es":"verano","en":"summer"},{"rank":776,"es":"mentira","en":"lie"},{"rank":777,"es":"tarjeta","en":"card"},{"rank":778,"es":"preparado","en":"prepared"},{"rank":779,"es":"flor","en":"flower"},{"rank":780,"es":"vos","en":"you (informal, LATAM)"},{"rank":781,"es":"opción","en":"option"},{"rank":782,"es":"isla","en":"island"},{"rank":783,"es":"cerrar","en":"to close"},{"rank":784,"es":"piel","en":"skin"},{"rank":785,"es":"enemigo","en":"enemy"},{"rank":786,"es":"exacto","en":"exact"},{"rank":787,"es":"justicia","en":"justice"},{"rank":788,"es":"obviamente","en":"obviously"},{"rank":789,"es":"despertar","en":"to wake up"},{"rank":790,"es":"calor","en":"heat"},{"rank":791,"es":"referir","en":"to refer"},{"rank":792,"es":"batalla","en":"battle"},{"rank":793,"es":"fantástico","en":"fantastic"},{"rank":794,"es":"brazo","en":"arm"},{"rank":795,"es":"absolutamente","en":"absolutely"},{"rank":796,"es":"escapar","en":"to escape"},{"rank":797,"es":"bosque","en":"forest"},{"rank":798,"es":"gay","en":"gay"},{"rank":799,"es":"pierna","en":"leg"},{"rank":800,"es":"visita","en":"visit"},{"rank":801,"es":"movimiento","en":"movement"},{"rank":802,"es":"rico","en":"rich"},{"rank":803,"es":"inocente","en":"innocent"},{"rank":804,"es":"pesar","en":"sorrow"},{"rank":805,"es":"absoluto","en":"absolute"},{"rank":806,"es":"vacaciones","en":"vacation"},{"rank":807,"es":"cine","en":"cinema"},{"rank":808,"es":"brillante","en":"brilliant"},{"rank":809,"es":"confianza","en":"confidence"},{"rank":810,"es":"vuestro","en":"yours (informal plural)"},{"rank":811,"es":"especialmente","en":"especially"},{"rank":812,"es":"embarazada","en":"pregnant"},{"rank":813,"es":"pantalón","en":"pants"},{"rank":814,"es":"defensa","en":"defense"},{"rank":815,"es":"estupendo","en":"great"},{"rank":816,"es":"presión","en":"pressure"},{"rank":817,"es":"inmediatamente","en":"immediately"},{"rank":818,"es":"testigo","en":"witness"},{"rank":819,"es":"olvidar","en":"to forget"},{"rank":820,"es":"soldado","en":"soldier"},{"rank":821,"es":"resultar","en":"to result"},{"rank":822,"es":"depender","en":"to depend"},{"rank":823,"es":"motivo","en":"motive"},{"rank":824,"es":"inglés","en":"English"},{"rank":825,"es":"estudio","en":"study"},{"rank":826,"es":"sentimiento","en":"feeling"},{"rank":827,"es":"propósito","en":"purpose"},{"rank":828,"es":"partir","en":"to depart"},{"rank":829,"es":"metro","en":"subway"},{"rank":830,"es":"ridículo","en":"ridiculous"},{"rank":831,"es":"dama","en":"lady"},{"rank":832,"es":"operación","en":"operation"},{"rank":833,"es":"empresa","en":"company"},{"rank":834,"es":"laboratorio","en":"laboratory"},{"rank":835,"es":"elección","en":"choice/election"},{"rank":836,"es":"menudo","en":"often (a menudo)"},{"rank":837,"es":"beso","en":"kiss"},{"rank":838,"es":"copa","en":"glass (drink)"},{"rank":839,"es":"conversación","en":"conversation"},{"rank":840,"es":"espíritu","en":"spirit"},{"rank":841,"es":"cansado","en":"tired"},{"rank":842,"es":"interesar","en":"to interest"},{"rank":843,"es":"casado","en":"married"},{"rank":844,"es":"enorme","en":"huge"},{"rank":845,"es":"fe","en":"faith"},{"rank":846,"es":"mostrar","en":"to show"},{"rank":847,"es":"trampa","en":"trap"},{"rank":848,"es":"memoria","en":"memory"},{"rank":849,"es":"contrario","en":"opposite"},{"rank":850,"es":"subir","en":"to go up"},{"rank":851,"es":"turno","en":"turn"},{"rank":852,"es":"preocupado","en":"worried"},{"rank":853,"es":"restaurante","en":"restaurant"},{"rank":854,"es":"calmar","en":"to calm"},{"rank":855,"es":"caer","en":"to fall"},{"rank":856,"es":"leche","en":"milk"},{"rank":857,"es":"preferir","en":"to prefer"},{"rank":858,"es":"red","en":"net/network"},{"rank":859,"es":"solamente","en":"only"},{"rank":860,"es":"taxi","en":"taxi"},{"rank":861,"es":"anillo","en":"ring"},{"rank":862,"es":"héroe","en":"hero"},{"rank":863,"es":"decidir","en":"to decide"},{"rank":864,"es":"responsable","en":"responsible"},{"rank":865,"es":"trago","en":"drink"},{"rank":866,"es":"árbol","en":"tree"},{"rank":867,"es":"diente","en":"tooth"},{"rank":868,"es":"encantado","en":"delighted"},{"rank":869,"es":"camión","en":"truck"},{"rank":870,"es":"vender","en":"to sell"},{"rank":871,"es":"detener","en":"to stop"},{"rank":872,"es":"luchar","en":"to fight"},{"rank":873,"es":"cabo","en":"end"},{"rank":874,"es":"ruido","en":"noise"},{"rank":875,"es":"lucha","en":"struggle"},{"rank":876,"es":"reloj","en":"watch/clock"},{"rank":877,"es":"gato","en":"cat"},{"rank":878,"es":"averiguar","en":"to find out"},{"rank":879,"es":"volar","en":"to fly"},{"rank":880,"es":"colegio","en":"school"},{"rank":881,"es":"sonido","en":"sound"},{"rank":882,"es":"pasado","en":"past"},{"rank":883,"es":"código","en":"code"},{"rank":884,"es":"imagen","en":"image"},{"rank":885,"es":"riesgo","en":"risk"},{"rank":886,"es":"pan","en":"bread"},{"rank":887,"es":"hielo","en":"ice"},{"rank":888,"es":"prensa","en":"press"},{"rank":889,"es":"caminar","en":"to walk"},{"rank":890,"es":"televisión","en":"television"},{"rank":891,"es":"coger","en":"to grab"},{"rank":892,"es":"posibilidad","en":"possibility"},{"rank":893,"es":"asiento","en":"seat"},{"rank":894,"es":"herir","en":"to hurt/wound"},{"rank":895,"es":"seguramente","en":"surely"},{"rank":896,"es":"proyecto","en":"project"},{"rank":897,"es":"pared","en":"wall"},{"rank":898,"es":"sospechoso","en":"suspect"},{"rank":899,"es":"naturaleza","en":"nature"},{"rank":900,"es":"silla","en":"chair"},{"rank":901,"es":"arreglar","en":"to fix"},{"rank":902,"es":"obtener","en":"to obtain"},{"rank":903,"es":"señoría","en":"your honor"},{"rank":904,"es":"cantidad","en":"quantity"},{"rank":905,"es":"papa","en":"pope"},{"rank":906,"es":"llorar","en":"to cry"},{"rank":907,"es":"familiar","en":"family (adj.)/relative"},{"rank":908,"es":"desastre","en":"disaster"},{"rank":909,"es":"política","en":"politics"},{"rank":910,"es":"nosotras","en":"we (feminine)"},{"rank":911,"es":"enfermedad","en":"illness"},{"rank":912,"es":"colega","en":"colleague"},{"rank":913,"es":"príncipe","en":"prince"},{"rank":914,"es":"verde","en":"green"},{"rank":915,"es":"nervioso","en":"nervous"},{"rank":916,"es":"inspector","en":"inspector"},{"rank":917,"es":"servir","en":"to serve"},{"rank":918,"es":"playa","en":"beach"},{"rank":919,"es":"cantar","en":"to sing"},{"rank":920,"es":"velocidad","en":"speed"},{"rank":921,"es":"total","en":"total"},{"rank":922,"es":"cabello","en":"hair"},{"rank":923,"es":"suficientemente","en":"sufficiently"},{"rank":924,"es":"huella","en":"trace"},{"rank":925,"es":"unidad","en":"unit"},{"rank":926,"es":"cuchillo","en":"knife"},{"rank":927,"es":"tontería","en":"nonsense"},{"rank":928,"es":"emergencia","en":"emergency"},{"rank":929,"es":"robo","en":"robbery"},{"rank":930,"es":"permitir","en":"to permit"},{"rank":931,"es":"parque","en":"park"},{"rank":932,"es":"roto","en":"broken"},{"rank":933,"es":"serie","en":"series"},{"rank":934,"es":"evidencia","en":"evidence"},{"rank":935,"es":"botella","en":"bottle"},{"rank":936,"es":"viento","en":"wind"},{"rank":937,"es":"mando","en":"command"},{"rank":938,"es":"apoyo","en":"support"},{"rank":939,"es":"bala","en":"bullet"},{"rank":940,"es":"tiro","en":"shot"},{"rank":941,"es":"época","en":"era"},{"rank":942,"es":"puente","en":"bridge"},{"rank":943,"es":"distancia","en":"distance"},{"rank":944,"es":"desear","en":"to wish"},{"rank":945,"es":"pelear","en":"to fight"},{"rank":946,"es":"echar","en":"to throw"},{"rank":947,"es":"descanso","en":"break/rest"},{"rank":948,"es":"área","en":"area"},{"rank":949,"es":"orgulloso","en":"proud"},{"rank":950,"es":"dato","en":"data"},{"rank":951,"es":"espectáculo","en":"show"},{"rank":952,"es":"magia","en":"magic"},{"rank":953,"es":"nacional","en":"national"},{"rank":954,"es":"universo","en":"universe"},{"rank":955,"es":"nariz","en":"nose"},{"rank":956,"es":"vergüenza","en":"shame"},{"rank":957,"es":"monstruo","en":"monster"},{"rank":958,"es":"princesa","en":"princess"},{"rank":959,"es":"autobús","en":"bus"},{"rank":960,"es":"cuidar","en":"to take care of"},{"rank":961,"es":"huevo","en":"egg"},{"rank":962,"es":"paseo","en":"walk/stroll"},{"rank":963,"es":"detalle","en":"detail"},{"rank":964,"es":"belleza","en":"beauty"},{"rank":965,"es":"abierto","en":"open"},{"rank":966,"es":"enviar","en":"to send"},{"rank":967,"es":"ministro","en":"minister"},{"rank":968,"es":"conducir","en":"to drive"},{"rank":969,"es":"aceptar","en":"to accept"},{"rank":970,"es":"contrato","en":"contract"},{"rank":971,"es":"viernes","en":"Friday"},{"rank":972,"es":"hecho","en":"fact"},{"rank":973,"es":"sociedad","en":"society"},{"rank":974,"es":"carga","en":"load"},{"rank":975,"es":"presente","en":"present"},{"rank":976,"es":"uso","en":"use"},{"rank":977,"es":"dedo","en":"finger"},{"rank":978,"es":"oferta","en":"offer"},{"rank":979,"es":"proteger","en":"to protect"},{"rank":980,"es":"recibir","en":"to receive"},{"rank":981,"es":"agradecer","en":"to thank"},{"rank":982,"es":"robar","en":"to steal"},{"rank":983,"es":"enamorado","en":"in love"},{"rank":984,"es":"oeste","en":"west"},{"rank":985,"es":"herida","en":"wound"},{"rank":986,"es":"despacio","en":"slowly"},{"rank":987,"es":"directamente","en":"directly"},{"rank":988,"es":"inmediato","en":"immediate"},{"rank":989,"es":"profesional","en":"professional"},{"rank":990,"es":"oscuro","en":"dark"},{"rank":991,"es":"mercado","en":"market"},{"rank":992,"es":"cerdo","en":"pig"},{"rank":993,"es":"líder","en":"leader"},{"rank":994,"es":"jurado","en":"jury"},{"rank":995,"es":"acordar","en":"to agree"},{"rank":996,"es":"desaparecido","en":"missing"},{"rank":997,"es":"últimamente","en":"lately"},{"rank":998,"es":"piedra","en":"stone"},{"rank":999,"es":"intención","en":"intention"},{"rank":1000,"es":"humor","en":"humor"},{"rank":1001,"es":"ángel","en":"angel"},{"rank":1002,"es":"peso","en":"weight"},{"rank":1003,"es":"asesinar","en":"to assassinate"},{"rank":1004,"es":"directo","en":"direct"},{"rank":1005,"es":"central","en":"central"},{"rank":1006,"es":"contento","en":"happy"},{"rank":1007,"es":"oscuridad","en":"darkness"},{"rank":1008,"es":"actuar","en":"to act"},{"rank":1009,"es":"comenzar","en":"to begin"},{"rank":1010,"es":"privado","en":"private"},{"rank":1011,"es":"mirada","en":"look/gaze"},{"rank":1012,"es":"romper","en":"to break"},{"rank":1013,"es":"fiscal","en":"prosecutor"},{"rank":1014,"es":"jardín","en":"garden"},{"rank":1015,"es":"natural","en":"natural"},{"rank":1016,"es":"gratis","en":"free (no cost)"},{"rank":1017,"es":"costar","en":"to cost"},{"rank":1018,"es":"amenaza","en":"threat"}];
+  Store.init(onRemoteState);
+  if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  }
+})();
+</script>
+
+</body></html>
